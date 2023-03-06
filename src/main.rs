@@ -30,7 +30,8 @@ impl Character{
 struct IronmanGg {
     images: Vec<RetainedImage>,
 
-    roster: Vec<Character>,
+    team_a_roster: Vec<Character>,
+    team_b_roster: Vec<Character>,
     requested_roster_size: i32,
 
     characters: Vec<Character>,
@@ -97,7 +98,8 @@ impl Default for IronmanGg {
         return Self {
             images: load_images(),
 
-            roster: vec![],
+            team_a_roster: vec![],
+            team_b_roster: vec![],
             requested_roster_size: 1,
             characters: vec![Character::new("Dr. Mario".to_owned(), 0),
                              Character::new("Mario".to_owned(), 1),
@@ -139,8 +141,8 @@ impl eframe::App for IronmanGg {
                     if ui.add(egui::ImageButton::new(image.texture_id(ctx), image.size_vec2())
                         .selected(character.is_selected))
                         .clicked() {
-                            character.is_selected = !character.is_selected;
-                        }
+                        character.is_selected = !character.is_selected;
+                    }
                 }
             });
 
@@ -148,15 +150,12 @@ impl eframe::App for IronmanGg {
 
             ui.horizontal(|ui| {
                 ui.label("Roster size:");
-                ui.add(egui::DragValue::new(&mut self.requested_roster_size).clamp_range(1..=self.characters.len()))
-            });
+                ui.add(egui::DragValue::new(&mut self.requested_roster_size).clamp_range(1..=self.characters.len()));
 
-            ui.add_space(20.0);
-
-            ui.horizontal(|ui| {
                 if ui.button("Generate").clicked()
                 {
-                    self.roster.clear();
+                    self.team_a_roster.clear();
+                    self.team_b_roster.clear();
 
                     let mut selected_characters: Vec<Character> = vec![];
 
@@ -168,18 +167,33 @@ impl eframe::App for IronmanGg {
 
                     if ! selected_characters.is_empty() {
                         for _ in 0..self.requested_roster_size {
-                            let index = rand::thread_rng().gen_range(0..selected_characters.len());
-                            self.roster.push(selected_characters[index].clone());
+                            let team_a_index = rand::thread_rng().gen_range(0..selected_characters.len());
+                            self.team_a_roster.push(selected_characters[team_a_index].clone());
+
+                            let team_b_index = rand::thread_rng().gen_range(0..selected_characters.len());
+                            self.team_b_roster.push(selected_characters[team_b_index].clone());
                         }
                     }
                 }
             });
 
+            ui.add_space(20.0);
+
+            ui.heading("Team A:");
             ui.horizontal_wrapped(|ui| {
-                for roster_character in &mut self.roster {
-                    ui.label(&roster_character.name);
+                for roster_character in &mut self.team_a_roster {
+                    let image = self.images.get(roster_character.image_index as usize).unwrap();
+                    ui.add(egui::Image::new(image.texture_id(ctx), image.size_vec2()));
                 }
-            })
+            });
+
+            ui.heading("Team B:");
+            ui.horizontal_wrapped(|ui| {
+                for roster_character in &mut self.team_b_roster {
+                    let image = self.images.get(roster_character.image_index as usize).unwrap();
+                    ui.add(egui::Image::new(image.texture_id(ctx), image.size_vec2()));
+                }
+            });
         });
     }
 }
